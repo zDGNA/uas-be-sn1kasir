@@ -32,6 +32,7 @@ class AuthController {
     }
 
     public function logout() {
+        session_start();
         session_destroy();
         header("Location: ../views/login.php");
         exit();
@@ -69,4 +70,8 @@ class AuthController {
     }
 }
 
+if (isset($_GET['action']) && $_GET['action'] === 'logout') {
+    $auth = new AuthController();
+    $auth->logout();
+}
 ?>

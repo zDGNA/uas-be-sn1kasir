@@ -182,20 +182,18 @@ class Product {
     }
 
     // Update stock
-    public function updateStock($quantity) {
+    public function updateStock($product_id, $quantity) {
         $query = "UPDATE " . $this->table_name . " 
-                  SET stock = stock - :quantity 
-                  WHERE id = :id";
-        
+                SET stock = stock - :quantity 
+                WHERE id = :id";
+
         $stmt = $this->connection->prepare($query);
         $stmt->bindParam(':quantity', $quantity);
-        $stmt->bindParam(':id', $this->id);
+        $stmt->bindParam(':id', $product_id);
 
-        if($stmt->execute()) {
-            return true;
-        }
-        return false;
+        return $stmt->execute();
     }
+
 
     // Get low stock products
     public function getLowStockProducts() {

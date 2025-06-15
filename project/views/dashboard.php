@@ -1,3 +1,4 @@
+
 <?php
 require_once '../controllers/AuthController.php';
 require_once '../controllers/ProductController.php';

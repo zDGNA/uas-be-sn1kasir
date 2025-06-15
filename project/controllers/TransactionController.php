@@ -4,12 +4,14 @@ require_once '../models/Transaction.php';
 require_once '../models/TransactionDetail.php';
 require_once '../models/Product.php';
 require_once '../controllers/AuthController.php';
+require_once '../config/Database.php';
 
 class TransactionController {
     private $transaction;
     private $transactionDetail;
     private $product;
     private $auth;
+    private $conn;
 
     public function __construct() {
         $this->transaction = new Transaction();
@@ -17,6 +19,27 @@ class TransactionController {
         $this->product = new Product();
         $this->auth = new AuthController();
         $this->auth->requireLogin();
+
+        $database = new Database();
+        $this->conn = $database->connect();
+    }
+
+    public function beginTransaction() {
+        if ($this->conn) {
+            $this->conn->beginTransaction();
+        }
+    }
+
+    public function commit() {
+        if ($this->conn) {
+            $this->conn->commit();
+        }
+    }
+
+    public function rollback() {
+        if ($this->conn) {
+            $this->conn->rollBack();
+        }
     }
 
     public function index() {
@@ -47,81 +70,86 @@ class TransactionController {
                 'updated_at' => $this->transaction->updated_at
             ];
 
-            // Get transaction details
             $stmt = $this->transactionDetail->readByTransaction($id);
             $transaction_data['details'] = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
             return $transaction_data;
+            
         }
         return null;
+
+        
     }
+    
+public function store($data) {
+    try {
+        $this->beginTransaction();
 
-    public function store($data) {
-        try {
-            // Begin transaction
-            $this->transaction->connection->beginTransaction();
-
-            // Set transaction data
-            $current_user = $this->auth->getCurrentUser();
-            $this->transaction->customer_id = $data['customer_id'] ?? null;
-            $this->transaction->user_id = $current_user['id'];
-            $this->transaction->transaction_date = date('Y-m-d H:i:s');
-            $this->transaction->subtotal = $data['subtotal'];
-            $this->transaction->tax_amount = $data['tax_amount'] ?? 0;
-            $this->transaction->discount_amount = $data['discount_amount'] ?? 0;
-            $this->transaction->total_amount = $data['total_amount'];
-            $this->transaction->payment_method = $data['payment_method'];
-            $this->transaction->payment_amount = $data['payment_amount'];
-            $this->transaction->change_amount = $data['change_amount'] ?? 0;
-            $this->transaction->notes = $data['notes'] ?? '';
-            $this->transaction->status = 'completed';
-
-            // Create transaction
-            if(!$this->transaction->create()) {
-                throw new Exception('Failed to create transaction');
+        // Validasi customer_id
+        $customer_id = $data['customer_id'] ?? null;
+        if ($customer_id !== null) {
+            $stmt = $this->conn->prepare("SELECT id FROM customers WHERE id = ?");
+            $stmt->execute([$customer_id]);
+            if ($stmt->rowCount() == 0) {
+                $this->rollback(); // rollback jika tidak valid
+                return [
+                    'success' => false,
+                    'message' => 'Transaksi gagal: Customer ID tidak valid.'
+                ];
             }
-
-            $transaction_id = $this->transaction->id;
-
-            // Create transaction details and update stock
-            foreach($data['items'] as $item) {
-                $this->transactionDetail->transaction_id = $transaction_id;
-                $this->transactionDetail->product_id = $item['product_id'];
-                $this->transactionDetail->quantity = $item['quantity'];
-                $this->transactionDetail->unit_price = $item['unit_price'];
-                $this->transactionDetail->total_price = $item['total_price'];
-
-                if(!$this->transactionDetail->create()) {
-                    throw new Exception('Failed to create transaction detail');
-                }
-
-                // Update product stock
-                $this->product->id = $item['product_id'];
-                if(!$this->product->updateStock($item['quantity'])) {
-                    throw new Exception('Failed to update product stock');
-                }
-            }
-
-            // Commit transaction
-            $this->transaction->connection->commit();
-
-            return [
-                'success' => true,
-                'message' => 'Transaction created successfully',
-                'transaction_id' => $transaction_id,
-                'transaction_code' => $this->transaction->transaction_code
-            ];
-
-        } catch(Exception $e) {
-            // Rollback transaction
-            $this->transaction->connection->rollback();
-            
-            return [
-                'success' => false,
-                'message' => 'Transaction failed: ' . $e->getMessage()
-            ];
         }
+        if (empty($customer_id)) {
+            $customer_id = null; // Set benar-benar NULL jika kosong
+        }
+        
+        // Set data transaksi
+        $this->transaction->customer_id = $customer_id;
+        $this->transaction->user_id = $_SESSION['user_id']; // contoh
+        $this->transaction->transaction_code = $data['transaction_code'];
+        $this->transaction->transaction_date = date('Y-m-d H:i:s');
+        $this->transaction->subtotal = $data['subtotal'];
+        $this->transaction->tax_amount = $data['tax_amount'];
+        $this->transaction->discount_amount = $data['discount_amount'];
+        $this->transaction->total_amount = $data['total_amount'];
+        $this->transaction->payment_method = $data['payment_method'];
+        $this->transaction->payment_amount = $data['payment_amount'];
+        $this->transaction->change_amount = $data['change_amount'];
+        $this->transaction->notes = $data['notes'] ?? null;
+        $this->transaction->status = 'completed';
+
+        // Simpan transaksi utama
+        $this->transaction->create();
+
+        $transaction_id = $this->conn->lastInsertId();
+
+        // Simpan detail produk
+        foreach ($data['items'] as $item) {
+            $this->transactionDetail->transaction_id = $transaction_id;
+            $this->transactionDetail->product_id = $item['product_id'];
+            $this->transactionDetail->quantity = $item['quantity'];
+            $this->transactionDetail->unit_price = $item['unit_price'];
+            $this->transactionDetail->total_price = $item['total_price'];
+            $this->transactionDetail->create();
+
+            // Update stok produk
+            $this->product->updateStock($item['product_id'], -$item['quantity']);
+        }
+
+        $this->commit();
+
+        return [
+            'success' => true,
+            'message' => 'Transaksi berhasil disimpan.'
+        ];
+    } catch (Exception $e) {
+        $this->rollback();
+        return [
+            'success' => false,
+            'message' => 'Error: Transaction failed: ' . $e->getMessage()
+        ];
     }
+}
+
 
     public function getDailySalesReport($date) {
         return $this->transaction->getDailySalesReport($date);
@@ -137,5 +165,4 @@ class TransactionController {
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 }
-
 ?>
