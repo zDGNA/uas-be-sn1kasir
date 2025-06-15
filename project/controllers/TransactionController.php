@@ -101,7 +101,7 @@ public function store($data) {
         if (empty($customer_id)) {
             $customer_id = null; // Set benar-benar NULL jika kosong
         }
-        
+
         // Set data transaksi
         $this->transaction->customer_id = $customer_id;
         $this->transaction->user_id = $_SESSION['user_id']; // contoh
