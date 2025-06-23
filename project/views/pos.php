@@ -1,418 +1,449 @@
 <?php
+// Tampilkan error hanya saat dibuka langsung via browser
+// if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+//     ini_set('display_errors', 1);
+//     ini_set('display_startup_errors', 1);
+//     error_reporting(E_ALL);
+
+//     echo "MULAI POS.PHP<br>";
+// }
+
 require_once '../controllers/AuthController.php';
 require_once '../controllers/ProductController.php';
 require_once '../controllers/TransactionController.php';
 
+// if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+//     echo "AUTH CONTROLLER LOADED<br>";
+// }
+
 $auth = new AuthController();
 $auth->requireLogin();
+
+// if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+//     echo "AUTH OBJECT CREATED<br>";
+//     echo "LOGIN CHECK PASSED<br>";
+// }
 
 $current_user = $auth->getCurrentUser();
 $productController = new ProductController();
 
-// Handle AJAX requests
+// Handle AJAX POST
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     header('Content-Type: application/json');
-    
-    switch ($_POST['action']) {
-        case 'search_product':
-            $keyword = $_POST['keyword'] ?? '';
-            $products = $productController->search($keyword);
-            echo json_encode($products);
-            exit;
-            
-        case 'process_transaction':
-            $transactionController = new TransactionController();
-            $data = json_decode($_POST['data'], true);
-            $result = $transactionController->store($data);
-            echo json_encode($result);
-            exit;
+
+    try {
+        switch ($_POST['action']) {
+            case 'search_product':
+                $keyword = $_POST['keyword'] ?? '';
+                $products = $productController->search($keyword);
+                echo json_encode($products);
+                exit;
+
+            case 'process_transaction':
+                try {
+                    error_log("=== [DEBUG] Mulai Proses Transaksi ===");
+
+                    $transactionController = new TransactionController();
+                    $data = json_decode($_POST['data'], true);
+
+                    if (!$data) {
+                        throw new Exception('Data kosong atau format JSON tidak valid.');
+                    }
+
+                    error_log("DATA TRANSAKSI: " . json_encode($data));
+
+                    if (!isset($data['items']) || empty($data['items'])) {
+                        throw new Exception('Item transaksi kosong');
+                    }
+
+                    $data['transaction_code'] = "TRX" . date('YmdHis') . rand(100, 999);
+                    error_log("Kode transaksi: " . $data['transaction_code']);
+
+                    $result = $transactionController->store($data);
+                    error_log("Simpan transaksi selesai");
+
+                    if (!is_array($result)) {
+                        throw new Exception('store() tidak mengembalikan array');
+                    }
+
+                    echo json_encode($result);
+                } catch (Exception $e) {
+                    error_log("ERROR TRANSAKSI: " . $e->getMessage());
+                    echo json_encode([
+                        'success' => false,
+                        'message' => 'Error: ' . $e->getMessage()
+                    ]);
+                }
+                exit;
+        }
+    } catch (Exception $e) {
+        error_log("POS Error luar: " . $e->getMessage());
+        echo json_encode([
+            'success' => false,
+            'message' => 'Error luar: ' . $e->getMessage()
+        ]);
+        exit;
     }
 }
 ?>
+
+
 
 <!DOCTYPE html>
 <html lang="id">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Point of Sale - Sistem Kasir</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+    <title>Pembayaran - Sistem Kasir</title>
+<style>
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+    }
 
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: #f8f9fa;
-            line-height: 1.6;
-        }
+    body {
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        background: #1e1e2f;
+        color: #d4d4d4;
+        line-height: 1.6;
+    }
 
         .navbar {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #2a2a45 0%, #3a2e5a 100%);
             color: white;
             padding: 1rem 0;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
         }
 
-        .navbar-content {
-            max-width: 1400px;
-            margin: 0 auto;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 0 20px;
-        }
+    .navbar-content {
+        max-width: 1400px;
+        margin: 0 auto;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0 20px;
+    }
 
-        .navbar-brand {
-            font-size: 24px;
-            font-weight: bold;
-        }
+    .navbar-brand {
+        font-size: 24px;
+        font-weight: bold;
+    }
 
-        .navbar-menu {
-            display: flex;
-            list-style: none;
-            gap: 20px;
-        }
+    .navbar-menu {
+        display: flex;
+        list-style: none;
+        gap: 20px;
+    }
 
-        .navbar-menu a {
-            color: white;
-            text-decoration: none;
-            padding: 8px 16px;
-            border-radius: 5px;
-            transition: background 0.3s;
-        }
+    .navbar-menu a {
+        color: #d4d4d4;
+        text-decoration: none;
+        padding: 8px 16px;
+        border-radius: 5px;
+        transition: background 0.3s;
+    }
 
-        .navbar-menu a:hover, .navbar-menu a.active {
-            background: rgba(255,255,255,0.2);
-        }
+    .navbar-menu a:hover,
+    .navbar-menu a.active {
+        background: rgba(255,255,255,0.2);
+    }
 
-        .user-info {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
+    .user-info {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
 
-        .container {
-            max-width: 1400px;
-            margin: 0 auto;
-            padding: 20px;
-        }
+    .container {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 20px;
+    }
 
+    .pos-layout {
+        display: grid;
+        grid-template-columns: 1fr 400px;
+        gap: 20px;
+        height: calc(100vh - 120px);
+    }
+
+    .left-panel, .right-panel {
+        background: #2d2d40;
+        border-radius: 10px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.4);
+        display: flex;
+        flex-direction: column;
+    }
+
+    .search-section {
+        padding: 20px;
+        border-bottom: 1px solid #3b3b52;
+    }
+
+    .search-box {
+        position: relative;
+    }
+
+    .search-input {
+        width: 100%;
+        padding: 12px 40px 12px 16px;
+        border: 2px solid #3b3b52;
+        border-radius: 8px;
+        font-size: 16px;
+        background: #1e1e2f;
+        color: #d4d4d4;
+    }
+
+    .search-input:focus {
+        outline: none;
+        border-color: #667eea;
+    }
+
+    .search-icon {
+        position: absolute;
+        right: 12px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #999;
+    }
+
+    .products-grid {
+        flex: 1;
+        padding: 20px;
+        overflow-y: auto;
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        gap: 15px;
+    }
+
+    .product-card {
+        border: 2px solid #3b3b52;
+        border-radius: 8px;
+        padding: 15px;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.3s;
+        background: #1e1e2f;
+    }
+
+    .product-card:hover {
+        border-color: #667eea;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    }
+
+    .product-image {
+        width: 80px;
+        height: 80px;
+        background: #3b3b52;
+        border-radius: 8px;
+        margin: 0 auto 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 24px;
+        color: #aaa;
+    }
+
+    .product-name {
+        font-weight: 600;
+        margin-bottom: 5px;
+        font-size: 14px;
+        color: #ffffff;
+    }
+
+    .product-price {
+        color: #667eea;
+        font-weight: bold;
+        font-size: 16px;
+    }
+
+    .product-stock {
+        font-size: 12px;
+        color: #999;
+        margin-top: 5px;
+    }
+
+    .cart-header {
+        padding: 20px;
+        border-bottom: 1px solid #3b3b52;
+        background: #1e1e2f;
+        border-radius: 10px 10px 0 0;
+    }
+
+    .cart-header h3 {
+        margin: 0;
+        color: #ffffff;
+    }
+
+    .cart-items {
+        flex: 1;
+        padding: 20px;
+        overflow-y: auto;background: #1e1e2f;
+    }
+
+    .cart-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 15px 0;
+        border-bottom: 1px solid #3b3b52;
+    }
+
+    .item-info .item-name {
+        font-weight: 600;
+        color: #ffffff;
+    }
+
+    .item-price {
+        color: #999;
+        font-size: 14px;
+    }
+
+    .qty-btn {
+        width: 30px;
+        height: 30px;
+        border: 1px solid #3b3b52;
+        background: #2d2d40;
+        border-radius: 4px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #d4d4d4;
+    }
+
+    .qty-btn:hover {
+        background: #3a3a5c;
+    }
+
+    .qty-input {
+        width: 50px;
+        text-align: center;
+        border: 1px solid #3b3b52;
+        background: #1e1e2f;
+        color: #fff;
+        border-radius: 4px;
+        padding: 5px;
+    }
+
+    .remove-btn {
+        color: #dc3545;
+        cursor: pointer;
+        padding: 5px;
+        border-radius: 4px;
+    }
+
+    .cart-summary {
+        padding: 20px;
+        border-top: 1px solid #3b3b52;
+        background: #1e1e2f;
+    }
+
+    .summary-row {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 10px;
+    }
+
+    .summary-row.total {
+        font-weight: bold;
+        font-size: 18px;
+        color: #ffffff;
+        border-top: 1px solid #3b3b52;
+        padding-top: 10px;
+        margin-top: 10px;
+    }
+
+    .form-control {
+        width: 100%;
+        padding: 10px;
+        border: 1px solid #3b3b52;
+        border-radius: 4px;
+        font-size: 14px;
+        background: #1e1e2f;
+        color: #d4d4d4;
+    }
+
+    .btn {
+        padding: 12px 24px;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 16px;
+        font-weight: 500;
+        transition: all 0.3s;
+        text-decoration: none;
+        display: inline-block;
+        text-align: center;
+    }
+
+    .btn-primary {
+        background: #667eea;
+        color: white;
+    }
+
+    .btn-primary:hover {
+        background: #5a6fd8;
+    }
+
+    .btn-success {
+        background: #28a745;
+        color: white;
+        width: 100%;
+    }
+
+    .btn-success:hover {
+        background: #218838;
+    }
+
+    .btn-success:disabled {
+        background: #6c757d;
+        cursor: not-allowed;
+    }
+
+    .empty-cart {
+        text-align: center;
+        padding: 40px 20px;
+        color: #999;
+    }
+
+    .empty-cart-icon {
+        font-size: 48px;
+        margin-bottom: 15px;
+    }
+
+    @media (max-width: 1024px) {
         .pos-layout {
-            display: grid;
-            grid-template-columns: 1fr 400px;
-            gap: 20px;
-            height: calc(100vh - 120px);
-        }
-
-        .left-panel {
-            background: white;
-            border-radius: 10px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            display: flex;
-            flex-direction: column;
-        }
-
-        .search-section {
-            padding: 20px;
-            border-bottom: 1px solid #e9ecef;
-        }
-
-        .search-box {
-            position: relative;
-        }
-
-        .search-input {
-            width: 100%;
-            padding: 12px 40px 12px 16px;
-            border: 2px solid #e9ecef;
-            border-radius: 8px;
-            font-size: 16px;
-            transition: border-color 0.3s;
-        }
-
-        .search-input:focus {
-            outline: none;
-            border-color: #667eea;
-        }
-
-        .search-icon {
-            position: absolute;
-            right: 12px;
-            top: 50%;
-            transform: translateY(-50%);
-            color: #6c757d;
-        }
-
-        .products-grid {
-            flex: 1;
-            padding: 20px;
-            overflow-y: auto;
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-            gap: 15px;
-        }
-
-        .product-card {
-            border: 2px solid #e9ecef;
-            border-radius: 8px;
-            padding: 15px;
-            text-align: center;
-            cursor: pointer;
-            transition: all 0.3s;
-            background: white;
-        }
-
-        .product-card:hover {
-            border-color: #667eea;
-            transform: translateY(-2px);
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-        }
-
-        .product-image {
-            width: 80px;
-            height: 80px;
-            background: #f8f9fa;
-            border-radius: 8px;
-            margin: 0 auto 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 24px;
-            color: #6c757d;
-        }
-
-        .product-name {
-            font-weight: 600;
-            margin-bottom: 5px;
-            font-size: 14px;
-        }
-
-        .product-price {
-            color: #667eea;
-            font-weight: bold;
-            font-size: 16px;
-        }
-
-        .product-stock {
-            font-size: 12px;
-            color: #6c757d;
-            margin-top: 5px;
+            grid-template-columns: 1fr;
+            height: auto;
         }
 
         .right-panel {
-            background: white;
-            border-radius: 10px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            display: flex;
+            order: -1;
+            max-height: 400px;
+        }
+    }
+
+    @media (max-width: 768px) {
+        .products-grid {
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+        }
+
+        .navbar-content {
             flex-direction: column;
-        }
-
-        .cart-header {
-            padding: 20px;
-            border-bottom: 1px solid #e9ecef;
-            background: #f8f9fa;
-            border-radius: 10px 10px 0 0;
-        }
-
-        .cart-header h3 {
-            margin: 0;
-            color: #333;
-        }
-
-        .cart-items {
-            flex: 1;
-            padding: 20px;
-            overflow-y: auto;
-        }
-
-        .cart-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 15px 0;
-            border-bottom: 1px solid #e9ecef;
-        }
-
-        .cart-item:last-child {
-            border-bottom: none;
-        }
-
-        .item-info {
-            flex: 1;
-        }
-
-        .item-name {
-            font-weight: 600;
-            margin-bottom: 5px;
-        }
-
-        .item-price {
-            color: #6c757d;
-            font-size: 14px;
-        }
-
-        .item-controls {
-            display: flex;
-            align-items: center;
             gap: 10px;
         }
 
-        .qty-btn {
-            width: 30px;
-            height: 30px;
-            border: 1px solid #e9ecef;
-            background: white;
-            border-radius: 4px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
+        .navbar-menu {
+            flex-wrap: wrap;
             justify-content: center;
-            transition: all 0.3s;
         }
+    }
+</style>
 
-        .qty-btn:hover {
-            background: #f8f9fa;
-            border-color: #667eea;
-        }
 
-        .qty-input {
-            width: 50px;
-            text-align: center;
-            border: 1px solid #e9ecef;
-            border-radius: 4px;
-            padding: 5px;
-        }
-
-        .remove-btn {
-            color: #dc3545;
-            cursor: pointer;
-            padding: 5px;
-            border-radius: 4px;
-            transition: background 0.3s;
-        }
-
-        .remove-btn:hover {
-            background: #fee;
-        }
-
-        .cart-summary {
-            padding: 20px;
-            border-top: 1px solid #e9ecef;
-            background: #f8f9fa;
-        }
-
-        .summary-row {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 10px;
-        }
-
-        .summary-row.total {
-            font-weight: bold;
-            font-size: 18px;
-            color: #333;
-            border-top: 1px solid #e9ecef;
-            padding-top: 10px;
-            margin-top: 10px;
-        }
-
-        .payment-section {
-            margin-top: 20px;
-        }
-
-        .form-group {
-            margin-bottom: 15px;
-        }
-
-        .form-group label {
-            display: block;
-            margin-bottom: 5px;
-            font-weight: 500;
-        }
-
-        .form-control {
-            width: 100%;
-            padding: 10px;
-            border: 1px solid #e9ecef;
-            border-radius: 4px;
-            font-size: 14px;
-        }
-
-        .btn {
-            padding: 12px 24px;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 16px;
-            font-weight: 500;
-            transition: all 0.3s;
-            text-decoration: none;
-            display: inline-block;
-            text-align: center;
-        }
-
-        .btn-primary {
-            background: #667eea;
-            color: white;
-        }
-
-        .btn-primary:hover {
-            background: #5a6fd8;
-            transform: translateY(-1px);
-        }
-
-        .btn-success {
-            background: #28a745;
-            color: white;
-            width: 100%;
-        }
-
-        .btn-success:hover {
-            background: #218838;
-        }
-
-        .empty-cart {
-            text-align: center;
-            padding: 40px 20px;
-            color: #6c757d;
-        }
-
-        .empty-cart-icon {
-            font-size: 48px;
-            margin-bottom: 15px;
-        }
-
-        @media (max-width: 1024px) {
-            .pos-layout {
-                grid-template-columns: 1fr;
-                height: auto;
-            }
-            
-            .right-panel {
-                order: -1;
-                max-height: 400px;
-            }
-        }
-
-        @media (max-width: 768px) {
-            .products-grid {
-                grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-            }
-            
-            .navbar-content {
-                flex-direction: column;
-                gap: 10px;
-            }
-            
-            .navbar-menu {
-                flex-wrap: wrap;
-                justify-content: center;
-            }
-        }
-    </style>
 </head>
 <body>
     <nav class="navbar">
@@ -420,8 +451,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
             <div class="navbar-brand">Sistem Kasir</div>
             <ul class="navbar-menu">
                 <li><a href="dashboard.php">Dashboard</a></li>
-                <li><a href="pos.php" class="active">Point of Sale</a></li>
+                <li><a href="pos.php"class="active">Pembayaran</a></li>
                 <li><a href="products.php">Produk</a></li>
+                <li><a href="categories.php">Kategori</a></li>
                 <li><a href="transactions.php">Transaksi</a></li>
                 <?php if($current_user['role'] == 'admin'): ?>
                 <li><a href="users.php">Users</a></li>
@@ -485,13 +517,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                         </div>
                         <div class="form-group">
                             <label>Jumlah Bayar</label>
-                            <input type="number" class="form-control" id="paymentAmount" placeholder="0">
+                            <input type="number" class="form-control" id="paymentAmount" placeholder="0" min="0" step="0.01">
                         </div>
                         <div class="form-group">
                             <label>Kembalian</label>
                             <input type="text" class="form-control" id="changeAmount" readonly>
                         </div>
-                        <button class="btn btn-success" onclick="processTransaction()">
+                        <button class="btn btn-success" id="processBtn" onclick="processTransaction()">
                             Proses Transaksi
                         </button>
                     </div>
@@ -529,13 +561,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                 method: 'POST',
                 body: formData
             })
-            .then(response => response.json())
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
             .then(data => {
                 products = data;
                 displayProducts(data);
             })
             .catch(error => {
-                console.error('Error:', error);
+                console.error('Error loading products:', error);
+                alert('Gagal memuat produk: ' + error.message);
             });
         }
 
@@ -550,9 +588,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
             grid.innerHTML = products.map(product => `
                 <div class="product-card" onclick="addToCart(${product.id})">
                     <div class="product-image">📦</div>
-                    <div class="product-name">${product.name}</div>
+                    <div class="product-name">${escapeHtml(product.name)}</div>
                     <div class="product-price">Rp ${formatNumber(product.price)}</div>
-                    <div class="product-stock">Stok: ${product.stock} ${product.unit}</div>
+                    <div class="product-stock">Stok: ${product.stock} ${escapeHtml(product.unit)}</div>
                 </div>
             `).join('');
         }
@@ -631,7 +669,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
             cartItems.innerHTML = cart.map(item => `
                 <div class="cart-item">
                     <div class="item-info">
-                        <div class="item-name">${item.name}</div>
+                        <div class="item-name">${escapeHtml(item.name)}</div>
                         <div class="item-price">Rp ${formatNumber(item.price)} x ${item.quantity}</div>
                     </div>
                     <div class="item-controls">
@@ -701,20 +739,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                 return;
             }
 
+            // Disable button and show loading
+            const processBtn = document.getElementById('processBtn');
+            processBtn.disabled = true;
+            processBtn.textContent = 'Memproses...';
+            processBtn.classList.add('loading');
+
             const transactionData = {
                 items: cart.map(item => ({
-                    product_id: item.id,
-                    quantity: item.quantity,
-                    unit_price: item.price,
-                    total_price: item.total
+                    product_id: parseInt(item.id),
+                    quantity: parseInt(item.quantity),
+                    unit_price: parseFloat(item.price),
+                    total_price: parseFloat(item.total)
                 })),
-                subtotal: subtotal,
-                tax_amount: tax,
-                total_amount: total,
+                subtotal: parseFloat(subtotal),
+                tax_amount: parseFloat(tax),
+                total_amount: parseFloat(total),
                 payment_method: document.getElementById('paymentMethod').value,
-                payment_amount: paymentAmount,
-                change_amount: paymentAmount - total
+                payment_amount: parseFloat(paymentAmount),
+                change_amount: parseFloat(paymentAmount - total)
             };
+
+            console.log('Sending transaction data:', transactionData);
 
             const formData = new FormData();
             formData.append('action', 'process_transaction');
@@ -724,29 +770,56 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                 method: 'POST',
                 body: formData
             })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    alert('Transaksi berhasil! Kode: ' + data.transaction_code);
-                    // Reset cart
-                    cart = [];
-                    updateCartDisplay();
-                    document.getElementById('paymentAmount').value = '';
-                    document.getElementById('changeAmount').value = '';
-                    // Reload products to update stock
-                    loadProducts('');
-                } else {
-                    alert('Error: ' + data.message);
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok: ' + response.status);
+                }
+                return response.text();
+            })
+            .then(text => {
+                console.log('Raw response:', text);
+                try {
+                    const data = JSON.parse(text);
+                    console.log('Parsed response:', data);
+                    
+                    if (data.success) {
+                        alert('Transaksi berhasil! Kode: ' + (data.transaction_code || 'N/A'));
+                        // Reset cart
+                        cart = [];
+                        updateCartDisplay();
+                        document.getElementById('paymentAmount').value = '';
+                        document.getElementById('changeAmount').value = '';
+                        // Reload products to update stock
+                        loadProducts('');
+                    } else {
+                        alert('Error: ' + (data.message || 'Transaksi gagal'));
+                    }
+                } catch (e) {
+                    console.error('JSON parse error:', e);
+                    console.error('Response text:', text);
+                    alert('Error parsing response: ' + e.message);
                 }
             })
             .catch(error => {
-                console.error('Error:', error);
-                alert('Terjadi kesalahan saat memproses transaksi');
+                console.error('Error processing transaction:', error);
+                alert('Terjadi kesalahan saat memproses transaksi: ' + error.message);
+            })
+            .finally(() => {
+                // Re-enable button
+                processBtn.disabled = false;
+                processBtn.textContent = 'Proses Transaksi';
+                processBtn.classList.remove('loading');
             });
         }
 
         function formatNumber(number) {
             return new Intl.NumberFormat('id-ID').format(number);
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
         }
     </script>
 </body>

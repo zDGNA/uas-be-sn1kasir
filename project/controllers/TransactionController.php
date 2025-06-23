@@ -14,14 +14,17 @@ class TransactionController {
     private $conn;
 
     public function __construct() {
-        $this->transaction = new Transaction();
-        $this->transactionDetail = new TransactionDetail();
-        $this->product = new Product();
         $this->auth = new AuthController();
         $this->auth->requireLogin();
 
         $database = new Database();
         $this->conn = $database->connect();
+        
+        // Initialize models with shared connection
+        $this->transaction = new Transaction($this->conn);
+        $this->transactionDetail = new TransactionDetail($this->conn);
+        $this->product = new Product($this->conn);
+
     }
 
     public function beginTransaction() {
@@ -54,7 +57,6 @@ class TransactionController {
             $transaction_data = [
                 'id' => $this->transaction->id,
                 'transaction_code' => $this->transaction->transaction_code,
-                'customer_id' => $this->transaction->customer_id,
                 'user_id' => $this->transaction->user_id,
                 'transaction_date' => $this->transaction->transaction_date,
                 'subtotal' => $this->transaction->subtotal,
@@ -74,75 +76,83 @@ class TransactionController {
             $transaction_data['details'] = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
             return $transaction_data;
-            
         }
         return null;
-
-        
     }
     
 public function store($data) {
     try {
+        error_log("=== [STORE] Mulai transaksi ===");
+
+        if (!isset($data['items']) || empty($data['items'])) {
+            throw new Exception("No items in transaction");
+        }
+
+        if (!isset($data['subtotal']) || !isset($data['total_amount'])) {
+            throw new Exception("Missing required transaction amounts");
+        }
+
         $this->beginTransaction();
+        error_log("=== [STORE] Begin transaction");
 
-        // Validasi customer_id
-        $customer_id = $data['customer_id'] ?? null;
-        if ($customer_id !== null) {
-            $stmt = $this->conn->prepare("SELECT id FROM customers WHERE id = ?");
-            $stmt->execute([$customer_id]);
-            if ($stmt->rowCount() == 0) {
-                $this->rollback(); // rollback jika tidak valid
-                return [
-                    'success' => false,
-                    'message' => 'Transaksi gagal: Customer ID tidak valid.'
-                ];
-            }
-        }
-        if (empty($customer_id)) {
-            $customer_id = null; // Set benar-benar NULL jika kosong
-        }
+        $transaction_code = "TRX" . date('YmdHis') . rand(100, 999);
 
-        // Set data transaksi
-        $this->transaction->customer_id = $customer_id;
-        $this->transaction->user_id = $_SESSION['user_id']; // contoh
-        $this->transaction->transaction_code = $data['transaction_code'];
+        $this->transaction->user_id = $_SESSION['user_id'] ?? 0;
+        $this->transaction->transaction_code = $transaction_code;
         $this->transaction->transaction_date = date('Y-m-d H:i:s');
-        $this->transaction->subtotal = $data['subtotal'];
-        $this->transaction->tax_amount = $data['tax_amount'];
-        $this->transaction->discount_amount = $data['discount_amount'];
-        $this->transaction->total_amount = $data['total_amount'];
-        $this->transaction->payment_method = $data['payment_method'];
-        $this->transaction->payment_amount = $data['payment_amount'];
-        $this->transaction->change_amount = $data['change_amount'];
+        $this->transaction->subtotal = floatval($data['subtotal']);
+        $this->transaction->tax_amount = isset($data['tax_amount']) ? floatval($data['tax_amount']) : 0.00;
+        $this->transaction->discount_amount = isset($data['discount_amount']) ? floatval($data['discount_amount']) : 0.00;
+        $this->transaction->total_amount = floatval($data['total_amount']);
+        $this->transaction->payment_method = $data['payment_method'] ?? 'cash';
+        $this->transaction->payment_amount = floatval($data['payment_amount']);
+        $this->transaction->change_amount = isset($data['change_amount']) ? floatval($data['change_amount']) : 0.00;
         $this->transaction->notes = $data['notes'] ?? null;
         $this->transaction->status = 'completed';
 
-        // Simpan transaksi utama
-        $this->transaction->create();
+        error_log("=== [STORE] Simpan transaksi utama");
 
-        $transaction_id = $this->conn->lastInsertId();
+        if (!$this->transaction->create()) {
+            throw new Exception("Failed to create transaction: " . $this->transaction->getLastError());
+        }
 
-        // Simpan detail produk
+        $transaction_id = $this->transaction->id;
+        error_log("=== [STORE] Transaction ID: $transaction_id");
+
+        if (!$transaction_id) {
+            throw new Exception("Transaction ID not available after creation");
+        }
+
         foreach ($data['items'] as $item) {
-            $this->transactionDetail->transaction_id = $transaction_id;
-            $this->transactionDetail->product_id = $item['product_id'];
-            $this->transactionDetail->quantity = $item['quantity'];
-            $this->transactionDetail->unit_price = $item['unit_price'];
-            $this->transactionDetail->total_price = $item['total_price'];
-            $this->transactionDetail->create();
+            error_log("=== [STORE] Simpan detail: " . json_encode($item));
 
-            // Update stok produk
-            $this->product->updateStock($item['product_id'], -$item['quantity']);
+            $this->transactionDetail->transaction_id = $transaction_id;
+            $this->transactionDetail->product_id = intval($item['product_id']);
+            $this->transactionDetail->quantity = intval($item['quantity']);
+            $this->transactionDetail->unit_price = floatval($item['unit_price']);
+            $this->transactionDetail->total_price = floatval($item['total_price']);
+
+            if (!$this->transactionDetail->create()) {
+                throw new Exception("Failed to create transaction detail for product ID: " . $item['product_id']);
+            }
+
+            if (!$this->product->updateStock($item['product_id'], $item['quantity'])) {
+                throw new Exception("Failed to update stock for product ID: " . $item['product_id']);
+            }
         }
 
         $this->commit();
+        error_log("=== [STORE] Commit sukses");
 
         return [
             'success' => true,
-            'message' => 'Transaksi berhasil disimpan.'
+            'message' => 'Transaksi berhasil disimpan.',
+            'transaction_code' => $transaction_code,
+            'transaction_id' => $transaction_id
         ];
     } catch (Exception $e) {
         $this->rollback();
+        error_log("Transaction error: " . $e->getMessage());
         return [
             'success' => false,
             'message' => 'Error: Transaction failed: ' . $e->getMessage()

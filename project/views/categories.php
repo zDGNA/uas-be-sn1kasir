@@ -83,7 +83,7 @@ if (isset($_GET['edit'])) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Manajemen Kategori - Sistem Kasir</title>
-    <style>
+   <style>
         * {
             margin: 0;
             padding: 0;
@@ -91,16 +91,17 @@ if (isset($_GET['edit'])) {
         }
 
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: #f8f9fa;
+            font-family: 'Segoe UI', 'Fira Code', monospace, sans-serif;
+            background: #1e1e2f;
+            color: #d4d4d4;
             line-height: 1.6;
         }
 
         .navbar {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #2a2a45 0%, #3a2e5a 100%);
             color: white;
             padding: 1rem 0;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
         }
 
         .navbar-content {
@@ -124,7 +125,7 @@ if (isset($_GET['edit'])) {
         }
 
         .navbar-menu a {
-            color: white;
+            color: #d4d4d4;
             text-decoration: none;
             padding: 8px 16px;
             border-radius: 5px;
@@ -132,7 +133,7 @@ if (isset($_GET['edit'])) {
         }
 
         .navbar-menu a:hover, .navbar-menu a.active {
-            background: rgba(255,255,255,0.2);
+            background: #3a3a5c;
         }
 
         .user-info {
@@ -155,12 +156,11 @@ if (isset($_GET['edit'])) {
         }
 
         .page-header h1 {
-            color: #333;
+            color: #ffffff;
         }
 
         .btn {
             padding: 10px 20px;
-            border: none;
             border-radius: 5px;
             cursor: pointer;
             text-decoration: none;
@@ -190,7 +190,7 @@ if (isset($_GET['edit'])) {
 
         .btn-warning {
             background: #ffc107;
-            color: #212529;
+            color: #1e1e2f;
         }
 
         .btn-warning:hover {
@@ -212,22 +212,22 @@ if (isset($_GET['edit'])) {
         }
 
         .card {
-            background: white;
+            background: #2d2d40;
             border-radius: 10px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            overflow: hidden;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
             margin-bottom: 20px;
+            color: #d4d4d4;
         }
 
         .card-header {
             padding: 20px;
-            background: #f8f9fa;
-            border-bottom: 1px solid #e9ecef;
+            background: #242438;
+            border-bottom: 1px solid #3b3b52;
         }
 
         .card-header h3 {
             margin: 0;
-            color: #333;
+            color: #ffffff;
         }
 
         .card-body {
@@ -242,16 +242,17 @@ if (isset($_GET['edit'])) {
             display: block;
             margin-bottom: 5px;
             font-weight: 500;
-            color: #333;
+            color: #ffffff;
         }
 
         .form-control {
             width: 100%;
             padding: 10px;
-            border: 1px solid #e9ecef;
+            border: 1px solid #3b3b52;
             border-radius: 5px;
             font-size: 14px;
-            transition: border-color 0.3s;
+            background: #1e1e2f;
+            color: #ffffff;
         }
 
         .form-control:focus {
@@ -273,17 +274,17 @@ if (isset($_GET['edit'])) {
         .table td {
             padding: 12px;
             text-align: left;
-            border-bottom: 1px solid #e9ecef;
+            border-bottom: 1px solid #3b3b52;
         }
 
         .table th {
-            background: #f8f9fa;
+            background: #242438;
             font-weight: 600;
-            color: #333;
+            color: #ffffff;
         }
 
         .table tbody tr:hover {
-            background: #f8f9fa;
+            background: #2f2f4f;
         }
 
         .badge {
@@ -294,13 +295,13 @@ if (isset($_GET['edit'])) {
         }
 
         .badge-success {
-            background: #d4edda;
-            color: #155724;
+            background: #2d5030;
+            color: #7aff98;
         }
 
         .badge-warning {
-            background: #fff3cd;
-            color: #856404;
+            background: #5c4600;
+            color: #ffd966;
         }
 
         .alert {
@@ -310,15 +311,15 @@ if (isset($_GET['edit'])) {
         }
 
         .alert-success {
-            background: #d4edda;
-            color: #155724;
-            border: 1px solid #c3e6cb;
+            background: #2d5030;
+            color: #7aff98;
+            border: 1px solid #3d6f3f;
         }
 
         .alert-error {
-            background: #f8d7da;
-            color: #721c24;
-            border: 1px solid #f5c6cb;
+            background: #5c2b37;
+            color: #ff6b81;
+            border: 1px solid #883e4e;
         }
 
         .modal {
@@ -333,34 +334,37 @@ if (isset($_GET['edit'])) {
         }
 
         .modal-content {
-            background: white;
+            background: #2d2d40;
             margin: 10% auto;
             padding: 0;
             border-radius: 10px;
             width: 90%;
             max-width: 500px;
+            color: #d4d4d4;
         }
 
         .modal-header {
             padding: 20px;
-            border-bottom: 1px solid #e9ecef;
+            border-bottom: 1px solid #3b3b52;
             display: flex;
             justify-content: space-between;
             align-items: center;
+            background: #242438;
         }
 
         .modal-header h4 {
             margin: 0;
+            color: #ffffff;
         }
 
         .close {
             font-size: 24px;
             cursor: pointer;
-            color: #6c757d;
+            color: #aaa;
         }
 
         .close:hover {
-            color: #333;
+            color: #fff;
         }
 
         .modal-body {
@@ -372,12 +376,10 @@ if (isset($_GET['edit'])) {
                 flex-direction: column;
                 gap: 10px;
             }
-            
             .navbar-menu {
                 flex-wrap: wrap;
                 justify-content: center;
             }
-            
             .page-header {
                 flex-direction: column;
                 gap: 15px;
@@ -392,7 +394,7 @@ if (isset($_GET['edit'])) {
             <div class="navbar-brand">Sistem Kasir</div>
             <ul class="navbar-menu">
                 <li><a href="dashboard.php">Dashboard</a></li>
-                <li><a href="pos.php">Point of Sale</a></li>
+                <li><a href="pos.php">Pembayaran</a></li>
                 <li><a href="products.php">Produk</a></li>
                 <li><a href="categories.php" class="active">Kategori</a></li>
                 <li><a href="transactions.php">Transaksi</a></li>

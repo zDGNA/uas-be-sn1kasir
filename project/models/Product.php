@@ -21,10 +21,15 @@ class Product {
     public $created_at;
     public $updated_at;
 
-    public function __construct() {
+public function __construct($db = null) {
+    if ($db) {
+        $this->connection = $db;
+    } else {
         $database = new Database();
         $this->connection = $database->connect();
     }
+}
+
 
     // Create product
     public function create() {

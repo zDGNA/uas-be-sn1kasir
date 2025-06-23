@@ -53,324 +53,330 @@ foreach ($transactions as $transaction) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Laporan - Sistem Kasir</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
+<style>
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+    }
+
+    body {
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        background: #1e1e2f;
+        color: #dcdcdc;
+        line-height: 1.6;
+    }
+
+        .navbar {
+            background: linear-gradient(135deg, #2a2a45 0%, #3a2e5a 100%);
+            color: white;
+            padding: 1rem 0;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+
+    .navbar-content {
+        max-width: 1200px;
+        margin: 0 auto;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0 20px;
+    }
+
+    .navbar-brand {
+        font-size: 24px;
+        font-weight: bold;
+    }
+
+    .navbar-menu {
+        display: flex;
+        list-style: none;
+        gap: 20px;
+    }
+
+    .navbar-menu a {
+        color: white;
+        text-decoration: none;
+        padding: 8px 16px;
+        border-radius: 5px;
+        transition: background 0.3s;
+    }
+
+    .navbar-menu a:hover, .navbar-menu a.active {
+        background: rgba(255,255,255,0.2);
+    }
+
+    .user-info {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 20px;
+    }
+
+    .page-header {
+        margin-bottom: 30px;
+    }
+
+    .page-header h1 {
+        color: #ffffff;
+        margin-bottom: 10px;
+    }
+
+    .btn {
+        padding: 10px 20px;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        text-decoration: none;
+        display: inline-block;
+        font-size: 14px;
+        font-weight: 500;
+        transition: all 0.3s;
+    }
+
+    .btn-primary {
+        background: #667eea;
+        color: white;
+    }
+
+    .btn-primary:hover {
+        background: #5a6fd8;
+    }
+
+    .btn-success {
+        background: #28a745;
+        color: white;
+    }
+
+    .btn-success:hover {
+        background: #218838;
+    }
+
+    .card {
+        background: #2c2c3c;
+        border-radius: 10px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.4);
+        overflow: hidden;
+        margin-bottom: 20px;
+    }
+
+    .card-header {
+        padding: 20px;
+        background: #242436;
+        border-bottom: 1px solid #3a3a4f;
+    }
+
+    .card-header h3 {
+        margin: 0;
+        color: #ffffff;
+    }
+
+    .card-body {
+        padding: 20px;
+    }
+
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 20px;
+        margin-bottom: 30px;
+    }
+
+    .stat-card {
+        background: #2c2c3c;
+        padding: 20px;
+        border-radius: 10px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        text-align: center;
+        border-left: 4px solid #667eea;
+    }
+
+    .stat-value {
+        font-size: 24px;
+        font-weight: bold;
+        color: #ffffff;
+        margin-bottom: 5px;
+    }
+
+    .stat-label {
+        color: #a0a0b0;
+        font-size: 14px;
+    }
+
+    .filter-section {
+        display: flex;
+        gap: 15px;
+        align-items: end;
+        margin-bottom: 20px;
+        flex-wrap: wrap;
+    }
+
+    .form-group {
+        margin-bottom: 15px;
+    }
+
+    .form-group label {
+        display: block;
+        margin-bottom: 5px;
+        font-weight: 500;
+        color: #cccccc;
+    }
+
+    .form-control {
+        padding: 8px 12px;
+        border: 1px solid #444;
+        border-radius: 5px;
+        font-size: 14px;
+        background: #1e1e2f;
+        color: #f1f1f1;
+    }
+
+    .form-control:focus {
+        outline: none;
+        border-color: #667eea;
+    }
+
+    .table-responsive {
+        overflow-x: auto;
+    }
+
+    .table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 20px;
+        color: #ffffff;
+    }
+
+    .table th,
+    .table td {
+        padding: 12px;
+        text-align: left;
+        border-bottom: 1px solid #3a3a4f;
+    }
+
+    .table th {
+        background: #2a2a3d;
+        font-weight: 600;
+        color: #ffffff;
+    }
+
+    .table tbody tr:hover {
+        background: #34344f;
+    }
+
+    .badge {
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-size: 12px;
+        font-weight: 500;
+    }
+
+    .badge-danger {
+        background: #5a1e22;
+        color: #f5aeb0;
+    }
+
+    .chart-container {
+        position: relative;
+        height: 300px;
+        margin: 20px 0;
+    }
+
+    .chart-placeholder {
+        width: 100%;
+        height: 100%;
+        background: #2c2c3c;
+        border: 2px dashed #555;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #bbb;
+        border-radius: 8px;
+    }
+
+    .report-grid {
+        display: grid;
+        grid-template-columns: 2fr 1fr;
+        gap: 20px;
+        margin-bottom: 20px;
+    }
+
+    .payment-methods {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .payment-method-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 10px;
+        background: #2e2e3e;
+        border-radius: 5px;
+    }
+
+    .method-name {
+        font-weight: 500;
+        text-transform: capitalize;
+        color: #fff;
+    }
+
+    .method-count {
+        background: #667eea;
+        color: white;
+        padding: 2px 8px;
+        border-radius: 12px;
+        font-size: 12px;
+    }
+
+    @media print {
+        .navbar, .filter-section, .btn {
+            display: none !important;
         }
 
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: #f8f9fa;
-            line-height: 1.6;
-        }
-
-        .navbar {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 1rem 0;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-
-        .navbar-content {
-            max-width: 1200px;
-            margin: 0 auto;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 0 20px;
-        }
-
-        .navbar-brand {
-            font-size: 24px;
-            font-weight: bold;
-        }
-
-        .navbar-menu {
-            display: flex;
-            list-style: none;
-            gap: 20px;
-        }
-
-        .navbar-menu a {
-            color: white;
-            text-decoration: none;
-            padding: 8px 16px;
-            border-radius: 5px;
-            transition: background 0.3s;
-        }
-
-        .navbar-menu a:hover, .navbar-menu a.active {
-            background: rgba(255,255,255,0.2);
-        }
-
-        .user-info {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 20px;
-        }
-
-        .page-header {
-            margin-bottom: 30px;
-        }
-
-        .page-header h1 {
-            color: #333;
-            margin-bottom: 10px;
-        }
-
-        .btn {
-            padding: 10px 20px;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            text-decoration: none;
-            display: inline-block;
-            font-size: 14px;
-            font-weight: 500;
-            transition: all 0.3s;
-        }
-
-        .btn-primary {
-            background: #667eea;
-            color: white;
-        }
-
-        .btn-primary:hover {
-            background: #5a6fd8;
-        }
-
-        .btn-success {
-            background: #28a745;
-            color: white;
-        }
-
-        .btn-success:hover {
-            background: #218838;
+            background: white;
+            color: black;
         }
 
         .card {
-            background: white;
-            border-radius: 10px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            overflow: hidden;
-            margin-bottom: 20px;
+            box-shadow: none;
+            border: 1px solid #ddd;
         }
+    }
 
-        .card-header {
-            padding: 20px;
-            background: #f8f9fa;
-            border-bottom: 1px solid #e9ecef;
-        }
-
-        .card-header h3 {
-            margin: 0;
-            color: #333;
-        }
-
-        .card-body {
-            padding: 20px;
-        }
-
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 20px;
-            margin-bottom: 30px;
-        }
-
-        .stat-card {
-            background: white;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            text-align: center;
-            border-left: 4px solid #667eea;
-        }
-
-        .stat-value {
-            font-size: 24px;
-            font-weight: bold;
-            color: #333;
-            margin-bottom: 5px;
-        }
-
-        .stat-label {
-            color: #6c757d;
-            font-size: 14px;
-        }
-
-        .filter-section {
-            display: flex;
-            gap: 15px;
-            align-items: end;
-            margin-bottom: 20px;
-            flex-wrap: wrap;
-        }
-
-        .form-group {
-            margin-bottom: 15px;
-        }
-
-        .form-group label {
-            display: block;
-            margin-bottom: 5px;
-            font-weight: 500;
-            color: #333;
-        }
-
-        .form-control {
-            padding: 8px 12px;
-            border: 1px solid #e9ecef;
-            border-radius: 5px;
-            font-size: 14px;
-            transition: border-color 0.3s;
-        }
-
-        .form-control:focus {
-            outline: none;
-            border-color: #667eea;
-        }
-
-        .table-responsive {
-            overflow-x: auto;
-        }
-
-        .table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 20px;
-        }
-
-        .table th,
-        .table td {
-            padding: 12px;
-            text-align: left;
-            border-bottom: 1px solid #e9ecef;
-        }
-
-        .table th {
-            background: #f8f9fa;
-            font-weight: 600;
-            color: #333;
-        }
-
-        .table tbody tr:hover {
-            background: #f8f9fa;
-        }
-
-        .badge {
-            padding: 4px 8px;
-            border-radius: 4px;
-            font-size: 12px;
-            font-weight: 500;
-        }
-
-        .badge-danger {
-            background: #f8d7da;
-            color: #721c24;
-        }
-
-        .chart-container {
-            position: relative;
-            height: 300px;
-            margin: 20px 0;
-        }
-
-        .chart-placeholder {
-            width: 100%;
-            height: 100%;
-            background: #f8f9fa;
-            border: 2px dashed #e9ecef;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: #6c757d;
-            border-radius: 8px;
-        }
-
-        .report-grid {
-            display: grid;
-            grid-template-columns: 2fr 1fr;
-            gap: 20px;
-            margin-bottom: 20px;
-        }
-
-        .payment-methods {
-            display: flex;
+    @media (max-width: 768px) {
+        .navbar-content {
             flex-direction: column;
             gap: 10px;
         }
 
-        .payment-method-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 10px;
-            background: #f8f9fa;
-            border-radius: 5px;
+        .navbar-menu {
+            flex-wrap: wrap;
+            justify-content: center;
         }
 
-        .method-name {
-            font-weight: 500;
-            text-transform: capitalize;
+        .filter-section {
+            flex-direction: column;
+            align-items: stretch;
         }
 
-        .method-count {
-            background: #667eea;
-            color: white;
-            padding: 2px 8px;
-            border-radius: 12px;
+        .report-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .table-responsive {
             font-size: 12px;
         }
+    }
+</style>
 
-        @media print {
-            .navbar, .filter-section, .btn {
-                display: none !important;
-            }
-            
-            body {
-                background: white;
-            }
-            
-            .card {
-                box-shadow: none;
-                border: 1px solid #ddd;
-            }
-        }
-
-        @media (max-width: 768px) {
-            .navbar-content {
-                flex-direction: column;
-                gap: 10px;
-            }
-            
-            .navbar-menu {
-                flex-wrap: wrap;
-                justify-content: center;
-            }
-            
-            .filter-section {
-                flex-direction: column;
-                align-items: stretch;
-            }
-            
-            .report-grid {
-                grid-template-columns: 1fr;
-            }
-            
-            .table-responsive {
-                font-size: 12px;
-            }
-        }
-    </style>
 </head>
 <body>
     <nav class="navbar">
@@ -378,11 +384,14 @@ foreach ($transactions as $transaction) {
             <div class="navbar-brand">Sistem Kasir</div>
             <ul class="navbar-menu">
                 <li><a href="dashboard.php">Dashboard</a></li>
-                <li><a href="pos.php">Point of Sale</a></li>
+                <li><a href="pos.php">Pembayaran</a></li>
                 <li><a href="products.php">Produk</a></li>
+                <li><a href="categories.php">Kategori</a></li>
                 <li><a href="transactions.php">Transaksi</a></li>
+                <?php if($current_user['role'] == 'admin'): ?>
                 <li><a href="users.php">Users</a></li>
-                <li><a href="reports.php" class="active">Laporan</a></li>
+                <li><a href="reports.php"class="active">Laporan</a></li>
+                <?php endif; ?>
             </ul>
             <div class="user-info">
                 <span>Halo, <?php echo htmlspecialchars($current_user['full_name']); ?></span>

@@ -93,334 +93,340 @@ if (isset($_GET['edit'])) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Manajemen User - Sistem Kasir</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+<style>
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+    }
 
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: #f8f9fa;
-            line-height: 1.6;
-        }
+    body {
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        background: #1e1e2f;
+        color: #dcdcdc;
+        line-height: 1.6;
+    }
 
         .navbar {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #2a2a45 0%, #3a2e5a 100%);
             color: white;
             padding: 1rem 0;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
         }
 
+    .navbar-content {
+        max-width: 1200px;
+        margin: 0 auto;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0 20px;
+    }
+
+    .navbar-brand {
+        font-size: 24px;
+        font-weight: bold;
+    }
+
+    .navbar-menu {
+        display: flex;
+        list-style: none;
+        gap: 20px;
+    }
+
+    .navbar-menu a {
+        color: white;
+        text-decoration: none;
+        padding: 8px 16px;
+        border-radius: 5px;
+        transition: background 0.3s;
+    }
+
+    .navbar-menu a:hover,
+    .navbar-menu a.active {
+        background: rgba(255,255,255,0.2);
+    }
+
+    .user-info {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 20px;
+    }
+
+    .page-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 30px;
+    }
+
+    .page-header h1 {
+        color: #ffffff;
+    }
+
+    .btn {
+        padding: 10px 20px;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        text-decoration: none;
+        display: inline-block;
+        font-size: 14px;
+        font-weight: 500;
+        transition: all 0.3s;
+    }
+
+    .btn-primary {
+        background: #667eea;
+        color: white;
+    }
+
+    .btn-primary:hover {
+        background: #5a6fd8;
+    }
+
+    .btn-success {
+        background: #28a745;
+        color: white;
+    }
+
+    .btn-success:hover {
+        background: #218838;
+    }
+
+    .btn-warning {
+        background: #ffc107;
+        color: #212529;
+    }
+
+    .btn-warning:hover {
+        background: #e0a800;
+    }
+
+    .btn-danger {
+        background: #dc3545;
+        color: white;
+    }
+
+    .btn-danger:hover {
+        background: #c82333;
+    }
+
+    .btn-sm {
+        padding: 5px 10px;
+        font-size: 12px;
+    }
+
+    .card {
+        background: #2e2e3e;
+        border-radius: 10px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.4);
+        overflow: hidden;
+        margin-bottom: 20px;
+    }
+
+    .card-header {
+        padding: 20px;
+        background: #262636;
+        border-bottom: 1px solid #3a3a4f;
+    }
+
+    .card-header h3 {
+        margin: 0;
+        color: #ffffff;
+    }
+
+    .card-body {
+        padding: 20px;
+    }
+
+    .form-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 20px;
+    }
+
+    .form-group {
+        margin-bottom: 20px;
+    }
+
+    .form-group label {
+        display: block;
+        margin-bottom: 5px;
+        font-weight: 500;
+        color: #dcdcdc;
+    }
+
+    .form-control {
+        width: 100%;
+        padding: 10px;
+        border: 1px solid #444;
+        border-radius: 5px;
+        font-size: 14px;
+        background: #1e1e2f;
+        color: #f1f1f1;
+    }
+
+    .form-control:focus {
+        outline: none;
+        border-color: #667eea;
+    }
+
+    .table-responsive {
+        overflow-x: auto;
+    }
+
+    .table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 20px;
+        color: #dcdcdc;
+    }
+
+    .table th,
+    .table td {
+        padding: 12px;
+        text-align: left;
+        border-bottom: 1px solid #3a3a4f;
+    }
+
+    .table th {
+        background: #2a2a3d;
+        font-weight: 600;
+        color: #fff;
+    }
+
+    .table tbody tr:hover {
+        background: #34344f;
+    }
+
+    .badge {
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-size: 12px;
+        font-weight: 500;
+    }
+
+    .badge-success {
+        background: #145c2a;
+        color: #aef3c2;
+    }
+
+    .badge-warning {
+        background: #4b3f00;
+        color: #ffd666;
+    }
+
+    .badge-info {
+        background: #1b4f5f;
+        color: #91eaf4;
+    }
+
+    .badge-danger {
+        background: #5a1e22;
+        color: #f5aeb0;
+    }
+
+    .alert {
+        padding: 15px;
+        border-radius: 5px;
+        margin-bottom: 20px;
+    }
+
+    .alert-success {
+        background: #2a4631;
+        color: #aef3c2;
+        border: 1px solid #3d6b4d;
+    }
+
+    .alert-error {
+        background: #512c2c;
+        color: #f5aeb0;
+        border: 1px solid #833e3e;
+    }
+
+    .modal {
+        display: none;
+        position: fixed;
+        z-index: 1000;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0,0,0,0.6);
+    }
+
+    .modal-content {
+        background: #2a2a3d;
+        margin: 5% auto;
+        padding: 0;
+        border-radius: 10px;
+        width: 90%;
+        max-width: 500px;
+        max-height: 90vh;
+        overflow-y: auto;
+        color: #fff;
+    }
+
+    .modal-header {
+        padding: 20px;
+        border-bottom: 1px solid #3b3b52;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .modal-header h4 {
+        margin: 0;
+    }
+
+    .close {
+        font-size: 24px;
+        cursor: pointer;
+        color: #aaa;
+    }
+
+    .close:hover {
+        color: #fff;
+    }
+
+    .modal-body {
+        padding: 20px;
+    }
+
+    @media (max-width: 768px) {
         .navbar-content {
-            max-width: 1200px;
-            margin: 0 auto;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 0 20px;
-        }
-
-        .navbar-brand {
-            font-size: 24px;
-            font-weight: bold;
-        }
-
-        .navbar-menu {
-            display: flex;
-            list-style: none;
-            gap: 20px;
-        }
-
-        .navbar-menu a {
-            color: white;
-            text-decoration: none;
-            padding: 8px 16px;
-            border-radius: 5px;
-            transition: background 0.3s;
-        }
-
-        .navbar-menu a:hover, .navbar-menu a.active {
-            background: rgba(255,255,255,0.2);
-        }
-
-        .user-info {
-            display: flex;
-            align-items: center;
+            flex-direction: column;
             gap: 10px;
         }
 
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 20px;
+        .navbar-menu {
+            flex-wrap: wrap;
+            justify-content: center;
         }
 
         .page-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 30px;
-        }
-
-        .page-header h1 {
-            color: #333;
-        }
-
-        .btn {
-            padding: 10px 20px;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            text-decoration: none;
-            display: inline-block;
-            font-size: 14px;
-            font-weight: 500;
-            transition: all 0.3s;
-        }
-
-        .btn-primary {
-            background: #667eea;
-            color: white;
-        }
-
-        .btn-primary:hover {
-            background: #5a6fd8;
-        }
-
-        .btn-success {
-            background: #28a745;
-            color: white;
-        }
-
-        .btn-success:hover {
-            background: #218838;
-        }
-
-        .btn-warning {
-            background: #ffc107;
-            color: #212529;
-        }
-
-        .btn-warning:hover {
-            background: #e0a800;
-        }
-
-        .btn-danger {
-            background: #dc3545;
-            color: white;
-        }
-
-        .btn-danger:hover {
-            background: #c82333;
-        }
-
-        .btn-sm {
-            padding: 5px 10px;
-            font-size: 12px;
-        }
-
-        .card {
-            background: white;
-            border-radius: 10px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            overflow: hidden;
-            margin-bottom: 20px;
-        }
-
-        .card-header {
-            padding: 20px;
-            background: #f8f9fa;
-            border-bottom: 1px solid #e9ecef;
-        }
-
-        .card-header h3 {
-            margin: 0;
-            color: #333;
-        }
-
-        .card-body {
-            padding: 20px;
+            flex-direction: column;
+            gap: 15px;
+            align-items: flex-start;
         }
 
         .form-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 20px;
-        }
-
-        .form-group {
-            margin-bottom: 20px;
-        }
-
-        .form-group label {
-            display: block;
-            margin-bottom: 5px;
-            font-weight: 500;
-            color: #333;
-        }
-
-        .form-control {
-            width: 100%;
-            padding: 10px;
-            border: 1px solid #e9ecef;
-            border-radius: 5px;
-            font-size: 14px;
-            transition: border-color 0.3s;
-        }
-
-        .form-control:focus {
-            outline: none;
-            border-color: #667eea;
+            grid-template-columns: 1fr;
         }
 
         .table-responsive {
-            overflow-x: auto;
-        }
-
-        .table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 20px;
-        }
-
-        .table th,
-        .table td {
-            padding: 12px;
-            text-align: left;
-            border-bottom: 1px solid #e9ecef;
-        }
-
-        .table th {
-            background: #f8f9fa;
-            font-weight: 600;
-            color: #333;
-        }
-
-        .table tbody tr:hover {
-            background: #f8f9fa;
-        }
-
-        .badge {
-            padding: 4px 8px;
-            border-radius: 4px;
             font-size: 12px;
-            font-weight: 500;
         }
+    }
+</style>
 
-        .badge-success {
-            background: #d4edda;
-            color: #155724;
-        }
-
-        .badge-warning {
-            background: #fff3cd;
-            color: #856404;
-        }
-
-        .badge-info {
-            background: #d1ecf1;
-            color: #0c5460;
-        }
-
-        .badge-danger {
-            background: #f8d7da;
-            color: #721c24;
-        }
-
-        .alert {
-            padding: 15px;
-            border-radius: 5px;
-            margin-bottom: 20px;
-        }
-
-        .alert-success {
-            background: #d4edda;
-            color: #155724;
-            border: 1px solid #c3e6cb;
-        }
-
-        .alert-error {
-            background: #f8d7da;
-            color: #721c24;
-            border: 1px solid #f5c6cb;
-        }
-
-        .modal {
-            display: none;
-            position: fixed;
-            z-index: 1000;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0,0,0,0.5);
-        }
-
-        .modal-content {
-            background: white;
-            margin: 5% auto;
-            padding: 0;
-            border-radius: 10px;
-            width: 90%;
-            max-width: 500px;
-            max-height: 90vh;
-            overflow-y: auto;
-        }
-
-        .modal-header {
-            padding: 20px;
-            border-bottom: 1px solid #e9ecef;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .modal-header h4 {
-            margin: 0;
-        }
-
-        .close {
-            font-size: 24px;
-            cursor: pointer;
-            color: #6c757d;
-        }
-
-        .close:hover {
-            color: #333;
-        }
-
-        .modal-body {
-            padding: 20px;
-        }
-
-        @media (max-width: 768px) {
-            .navbar-content {
-                flex-direction: column;
-                gap: 10px;
-            }
-            
-            .navbar-menu {
-                flex-wrap: wrap;
-                justify-content: center;
-            }
-            
-            .page-header {
-                flex-direction: column;
-                gap: 15px;
-                align-items: flex-start;
-            }
-            
-            .form-grid {
-                grid-template-columns: 1fr;
-            }
-            
-            .table-responsive {
-                font-size: 12px;
-            }
-        }
-    </style>
 </head>
 <body>
     <nav class="navbar">
@@ -428,11 +434,14 @@ if (isset($_GET['edit'])) {
             <div class="navbar-brand">Sistem Kasir</div>
             <ul class="navbar-menu">
                 <li><a href="dashboard.php">Dashboard</a></li>
-                <li><a href="pos.php">Point of Sale</a></li>
+                <li><a href="pos.php">Pembayaran</a></li>
                 <li><a href="products.php">Produk</a></li>
+                <li><a href="categories.php">Kategori</a></li>
                 <li><a href="transactions.php">Transaksi</a></li>
-                <li><a href="users.php" class="active">Users</a></li>
+                <?php if($current_user['role'] == 'admin'): ?>
+                <li><a href="users.php"class="active">Users</a></li>
                 <li><a href="reports.php">Laporan</a></li>
+                <?php endif; ?>
             </ul>
             <div class="user-info">
                 <span>Halo, <?php echo htmlspecialchars($current_user['full_name']); ?></span>

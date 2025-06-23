@@ -36,115 +36,119 @@ if($_SERVER['REQUEST_METHOD'] == 'POST') {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login - Sistem Kasir</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+<style>
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+    }
 
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
+    body {
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        background: #1e1e2f;
+        color: #dcdcdc;
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
 
-        .login-container {
-            background: white;
-            padding: 40px;
-            border-radius: 10px;
-            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
-            width: 100%;
-            max-width: 400px;
-        }
+    .login-container {
+        background: #2c2c3c;
+        padding: 40px;
+        border-radius: 10px;
+        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3);
+        width: 100%;
+        max-width: 400px;
+    }
 
-        .login-header {
-            text-align: center;
-            margin-bottom: 30px;
-        }
+    .login-header {
+        text-align: center;
+        margin-bottom: 30px;
+    }
 
-        .login-header h1 {
-            color: #333;
-            font-size: 28px;
-            margin-bottom: 10px;
-        }
+    .login-header h1 {
+        color: #ffffff;
+        font-size: 28px;
+        margin-bottom: 10px;
+    }
 
-        .login-header p {
-            color: #666;
-            font-size: 14px;
-        }
+    .login-header p {
+        color: #aaa;
+        font-size: 14px;
+    }
 
-        .form-group {
-            margin-bottom: 20px;
-        }
+    .form-group {
+        margin-bottom: 20px;
+    }
 
-        .form-group label {
-            display: block;
-            margin-bottom: 5px;
-            color: #333;
-            font-weight: 500;
-        }
+    .form-group label {
+        display: block;
+        margin-bottom: 5px;
+        color: #cccccc;
+        font-weight: 500;
+    }
 
-        .form-group input {
-            width: 100%;
-            padding: 12px;
-            border: 2px solid #e1e5e9;
-            border-radius: 5px;
-            font-size: 16px;
-            transition: border-color 0.3s;
-        }
+    .form-group input {
+        width: 100%;
+        padding: 12px;
+        background: #1e1e2f;
+        border: 2px solid #444;
+        border-radius: 5px;
+        font-size: 16px;
+        color: #f1f1f1;
+        transition: border-color 0.3s;
+    }
 
-        .form-group input:focus {
-            outline: none;
-            border-color: #667eea;
-        }
+    .form-group input:focus {
+        outline: none;
+        border-color: #667eea;
+    }
 
-        .btn-login {
-            width: 100%;
-            padding: 12px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border: none;
-            border-radius: 5px;
-            font-size: 16px;
-            cursor: pointer;
-            transition: transform 0.2s;
-        }
+    .btn-login {
+        width: 100%;
+        padding: 12px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border: none;
+        border-radius: 5px;
+        font-size: 16px;
+        cursor: pointer;
+        transition: transform 0.2s;
+    }
 
-        .btn-login:hover {
-            transform: translateY(-2px);
-        }
+    .btn-login:hover {
+        transform: translateY(-2px);
+    }
 
-        .error-message {
-            background: #fee;
-            color: #d63384;
-            padding: 10px;
-            border-radius: 5px;
-            margin-bottom: 20px;
-            border: 1px solid #f8d7da;
-        }
+    .error-message {
+        background: #5a1e22;
+        color: #f5aeb0;
+        padding: 10px;
+        border-radius: 5px;
+        margin-bottom: 20px;
+        border: 1px solid #cc4c5a;
+    }
 
-        .demo-info {
-            margin-top: 20px;
-            padding: 15px;
-            background: #f8f9fa;
-            border-radius: 5px;
-            font-size: 14px;
-        }
+    .demo-info {
+        margin-top: 20px;
+        padding: 15px;
+        background: #34344f;
+        border-radius: 5px;
+        font-size: 14px;
+    }
 
-        .demo-info h4 {
-            color: #495057;
-            margin-bottom: 10px;
-        }
+    .demo-info h4 {
+        color: #ffffff;
+        margin-bottom: 10px;
+    }
 
-        .demo-info p {
-            color: #6c757d;
-            margin-bottom: 5px;
-        }
-    </style>
+    .demo-info p {
+        color: #c0c0d0;
+        margin-bottom: 5px;
+    }
+</style>
+
 </head>
 <body>
     <div class="login-container">
