@@ -1,4 +1,5 @@
 <?php
+
 // Tampilkan error hanya saat dibuka langsung via browser
 // if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 //     ini_set('display_errors', 1);
@@ -23,6 +24,10 @@ $auth->requireLogin();
 //     echo "AUTH OBJECT CREATED<br>";
 //     echo "LOGIN CHECK PASSED<br>";
 // }
+
+
+$auth = new AuthController();
+$auth->requireLogin();
 
 $current_user = $auth->getCurrentUser();
 $productController = new ProductController();
@@ -419,31 +424,357 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
             grid-template-columns: 1fr;
             height: auto;
         }
-
-        .right-panel {
-            order: -1;
-            max-height: 400px;
-        }
     }
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
-    @media (max-width: 768px) {
-        .products-grid {
-            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #1e1e2f;
+            color: #d4d4d4;
+            line-height: 1.6;
+        }
+
+        .navbar {
+            background: linear-gradient(135deg, #2a2a45 0%, #3a2e5a 100%);
+            color: white;
+            padding: 1rem 0;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
         }
 
         .navbar-content {
-            flex-direction: column;
-            gap: 10px;
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 20px;
+        }
+
+        .navbar-brand {
+            font-size: 24px;
+            font-weight: bold;
         }
 
         .navbar-menu {
-            flex-wrap: wrap;
-            justify-content: center;
+            display: flex;
+            list-style: none;
+            gap: 20px;
         }
-    }
-</style>
 
 
+        .navbar-menu a {
+            color: #d4d4d4;
+            text-decoration: none;
+            padding: 8px 16px;
+            border-radius: 5px;
+            transition: background 0.3s;
+        }
+
+        .navbar-menu a:hover,
+        .navbar-menu a.active {
+            background: rgba(255,255,255,0.2);
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .pos-layout {
+            display: grid;
+            grid-template-columns: 1fr 400px;
+            gap: 20px;
+            height: calc(100vh - 120px);
+        }
+
+        .left-panel, .right-panel {
+            background: #2d2d40;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.4);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .search-section {
+            padding: 20px;
+            border-bottom: 1px solid #3b3b52;
+        }
+
+        .search-box {
+            position: relative;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 12px 40px 12px 16px;
+            border: 2px solid #3b3b52;
+            border-radius: 8px;
+            font-size: 16px;
+            background: #1e1e2f;
+            color: #d4d4d4;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .search-icon {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #999;
+        }
+
+        .products-grid {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 15px;
+        }
+
+        .product-card {
+            border: 2px solid #3b3b52;
+            border-radius: 8px;
+            padding: 15px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: #1e1e2f;
+        }
+
+        .product-card:hover {
+            border-color: #667eea;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+
+        .product-image {
+            width: 80px;
+            height: 80px;
+            background: #3b3b52;
+            border-radius: 8px;
+            margin: 0 auto 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            color: #aaa;
+        }
+
+        .product-name {
+            font-weight: 600;
+            margin-bottom: 5px;
+            font-size: 14px;
+            color: #ffffff;
+        }
+
+        .product-price {
+            color: #667eea;
+            font-weight: bold;
+            font-size: 16px;
+        }
+
+        .product-stock {
+            font-size: 12px;
+            color: #999;
+            margin-top: 5px;
+        }
+
+        .cart-header {
+            padding: 20px;
+            border-bottom: 1px solid #3b3b52;
+            background: #1e1e2f;
+            border-radius: 10px 10px 0 0;
+        }
+
+        .cart-header h3 {
+            margin: 0;
+            color: #ffffff;
+        }
+
+        .cart-items {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            background: #1e1e2f;
+        }
+
+        .cart-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 0;
+            border-bottom: 1px solid #3b3b52;
+        }
+
+        .item-info .item-name {
+            font-weight: 600;
+            color: #ffffff;
+        }
+
+        .item-price {
+            color: #999;
+            font-size: 14px;
+        }
+
+        .qty-btn {
+            width: 30px;
+            height: 30px;
+            border: 1px solid #3b3b52;
+            background: #2d2d40;
+            border-radius: 4px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #d4d4d4;
+        }
+
+        .qty-btn:hover {
+            background: #3a3a5c;
+        }
+
+        .qty-input {
+            width: 50px;
+            text-align: center;
+            border: 1px solid #3b3b52;
+            background: #1e1e2f;
+            color: #fff;
+            border-radius: 4px;
+            padding: 5px;
+        }
+
+        .remove-btn {
+            color: #dc3545;
+            cursor: pointer;
+            padding: 5px;
+            border-radius: 4px;
+        }
+
+        .cart-summary {
+            padding: 20px;
+            border-top: 1px solid #3b3b52;
+            background: #1e1e2f;
+        }
+
+        .summary-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+        }
+
+        .summary-row.total {
+            font-weight: bold;
+            font-size: 18px;
+            color: #ffffff;
+            border-top: 1px solid #3b3b52;
+            padding-top: 10px;
+            margin-top: 10px;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #3b3b52;
+            border-radius: 4px;
+            font-size: 14px;
+            background: #1e1e2f;
+            color: #d4d4d4;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 500;
+            transition: all 0.3s;
+            text-decoration: none;
+            display: inline-block;
+            text-align: center;
+        }
+
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #5a6fd8;
+        }
+
+        .btn-success {
+            background: #28a745;
+            color: white;
+            width: 100%;
+        }
+
+        .btn-success:hover {
+            background: #218838;
+        }
+
+        .btn-success:disabled {
+            background: #6c757d;
+            cursor: not-allowed;
+        }
+
+        .empty-cart {
+            text-align: center;
+            padding: 40px 20px;
+            color: #999;
+        }
+
+        .empty-cart-icon {
+            font-size: 48px;
+            margin-bottom: 15px;
+        }
+
+        @media (max-width: 1024px) {
+            .pos-layout {
+                grid-template-columns: 1fr;
+                height: auto;
+            }
+
+            .right-panel {
+                order: -1;
+                max-height: 400px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .products-grid {
+                grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            }
+
+            .navbar-content {
+                flex-direction: column;
+                gap: 10px;
+            }
+
+            .navbar-menu {
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+        }
+    </style>
 </head>
 <body>
     <nav class="navbar">
@@ -451,7 +782,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
             <div class="navbar-brand">Sistem Kasir</div>
             <ul class="navbar-menu">
                 <li><a href="dashboard.php">Dashboard</a></li>
-                <li><a href="pos.php"class="active">Pembayaran</a></li>
+                <li><a href="pos.php" class="active">Pembayaran</a></li>
                 <li><a href="products.php">Produk</a></li>
                 <li><a href="categories.php">Kategori</a></li>
                 <li><a href="transactions.php">Transaksi</a></li>
@@ -743,7 +1074,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
             const processBtn = document.getElementById('processBtn');
             processBtn.disabled = true;
             processBtn.textContent = 'Memproses...';
-            processBtn.classList.add('loading');
 
             const transactionData = {
                 items: cart.map(item => ({
@@ -760,7 +1090,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                 change_amount: parseFloat(paymentAmount - total)
             };
 
-            console.log('Sending transaction data:', transactionData);
 
             const formData = new FormData();
             formData.append('action', 'process_transaction');
@@ -777,10 +1106,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                 return response.text();
             })
             .then(text => {
-                console.log('Raw response:', text);
                 try {
                     const data = JSON.parse(text);
-                    console.log('Parsed response:', data);
                     
                     if (data.success) {
                         alert('Transaksi berhasil! Kode: ' + (data.transaction_code || 'N/A'));
@@ -796,7 +1123,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                     }
                 } catch (e) {
                     console.error('JSON parse error:', e);
-                    console.error('Response text:', text);
                     alert('Error parsing response: ' + e.message);
                 }
             })
@@ -808,7 +1134,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                 // Re-enable button
                 processBtn.disabled = false;
                 processBtn.textContent = 'Proses Transaksi';
-                processBtn.classList.remove('loading');
             });
         }
 

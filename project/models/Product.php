@@ -74,9 +74,11 @@ public function __construct($db = null) {
     // Read all products with category
     public function read() {
         $query = "SELECT p.*, c.name as category_name 
-                  FROM " . $this->table_name . " p
-                  LEFT JOIN categories c ON p.category_id = c.id
-                  ORDER BY p.name ASC";
+                FROM " . $this->table_name . " p
+                LEFT JOIN categories c ON p.category_id = c.id
+                WHERE p.status = 'active'
+                ORDER BY p.name ASC";
+
         $stmt = $this->connection->prepare($query);
         $stmt->execute();
         return $stmt;
@@ -158,33 +160,32 @@ public function __construct($db = null) {
 
     // Delete product
     public function delete() {
-        $query = "DELETE FROM " . $this->table_name . " WHERE id = :id";
+        $query = "UPDATE " . $this->table_name . " SET status = 'inactive' WHERE id = :id";
         $stmt = $this->connection->prepare($query);
         $this->id = htmlspecialchars(strip_tags($this->id));
         $stmt->bindParam(':id', $this->id);
 
-        if($stmt->execute()) {
-            return true;
-        }
-        return false;
+        return $stmt->execute();
     }
+
 
     // Search products by name or barcode
     public function search($keyword) {
         $query = "SELECT p.*, c.name as category_name 
-                  FROM " . $this->table_name . " p
-                  LEFT JOIN categories c ON p.category_id = c.id
-                  WHERE (p.name LIKE :keyword OR p.barcode LIKE :keyword) 
-                  AND p.status = 'active'
-                  ORDER BY p.name ASC";
+                FROM " . $this->table_name . " p
+                LEFT JOIN categories c ON p.category_id = c.id
+                WHERE (p.name LIKE :keyword OR p.barcode LIKE :keyword)
+                AND p.status = 'active'
+                ORDER BY p.name ASC";
         
         $stmt = $this->connection->prepare($query);
         $keyword = htmlspecialchars(strip_tags($keyword));
-        $keyword = "%{$keyword}%";
+        $keyword = "%{$keyword}%";  // Tambahkan wildcard untuk LIKE
         $stmt->bindParam(':keyword', $keyword);
         $stmt->execute();
         return $stmt;
     }
+
 
     // Update stock
     public function updateStock($product_id, $quantity) {
@@ -203,15 +204,17 @@ public function __construct($db = null) {
     // Get low stock products
     public function getLowStockProducts() {
         $query = "SELECT p.*, c.name as category_name 
-                  FROM " . $this->table_name . " p
-                  LEFT JOIN categories c ON p.category_id = c.id
-                  WHERE p.stock <= p.min_stock AND p.status = 'active'
-                  ORDER BY p.stock ASC";
+                FROM " . $this->table_name . " p
+                LEFT JOIN categories c ON p.category_id = c.id
+                WHERE p.stock <= p.min_stock
+                AND p.status = 'active'
+                ORDER BY p.stock ASC";
         
         $stmt = $this->connection->prepare($query);
         $stmt->execute();
         return $stmt;
     }
+
 }
 
 ?>

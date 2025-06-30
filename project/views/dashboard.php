@@ -46,6 +46,7 @@ $bestSellingProducts = $transactionController->getBestSellingProducts(5);
         }
     .navbar-content {
         max-width: 1200px;
+        max-width: 100%;
         margin: 0 auto;
         display: flex;
         justify-content: space-between;
